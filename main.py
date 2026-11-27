@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 import httpx
 from bs4 import BeautifulSoup
@@ -17,8 +17,9 @@ from gtts import gTTS
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-DATA_FILE = "published_concalls.json"
-META_FILE = "sync_meta.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_FILE = os.path.join(BASE_DIR, "published_concalls.json")
+META_FILE = os.path.join(BASE_DIR, "sync_meta.json")
 
 DEFAULT_GLOSSARY = [
     "EBITDA", "PAT", "YoY", "QoQ", "Revenue", "Margin", "Gross Margin", "Operating Margin",
@@ -112,8 +113,6 @@ def split_paragraphs_clean(raw_text: str) -> List[str]:
 
 
 async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
-    """Pulls latest official BSE & NSE Earnings Call Transcript PDFs, extracts paragraphs,
-    translates into Punjabi keeping English financial terms, and saves to DATA_FILE."""
     existing = load_json_file(DATA_FILE, [])
     existing_ids = {x.get("id") for x in existing}
     added = 0
@@ -122,7 +121,6 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
     candidates = []
 
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-        # 1. Fetch BSE Earnings Call Transcripts
         try:
             r = await client.get(
                 "https://api.bseindia.com/BseIndiaAPI/api/AnnSubCategoryGetData/w",
@@ -154,7 +152,6 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
         except Exception:
             pass
 
-        # 2. Fetch NSE Corporate Announcements filtered for transcripts
         try:
             nse_headers = {**BROWSER_HEADERS, "Referer": "https://www.nseindia.com/companies-listing/corporate-filings-announcements"}
             await client.get("https://www.nseindia.com", headers=nse_headers)
@@ -183,7 +180,6 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
         except Exception:
             pass
 
-        # Process up to `limit` new filings
         for item in candidates:
             if added >= limit:
                 break
@@ -239,7 +235,6 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Schedule automatic daily sync at 6:00 PM IST (18:00 Asia/Kolkata)
     scheduler.add_job(
         run_bse_nse_auto_sync,
         trigger=CronTrigger(hour=18, minute=0, timezone="Asia/Kolkata"),
@@ -252,7 +247,7 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown(wait=False)
 
 
-app = FastAPI(title="Punjab AI Concall Relay", version="4.0.0", lifespan=lifespan)
+app = FastAPI(title="Concall Punjabi — Punjab AI (All-in-One)", version="5.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -272,9 +267,21 @@ class TranslateRequest(BaseModel):
     glossary: List[str] = []
 
 
+# ================= SERVE FRONTEND DIRECTLY FROM RENDER =================
+@app.get("/")
+async def serve_index():
+    return FileResponse(os.path.join(BASE_DIR, "index.html"), media_type="text/html")
+
+
+@app.get("/manifest.json")
+async def serve_manifest():
+    return FileResponse(os.path.join(BASE_DIR, "manifest.json"), media_type="application/manifest+json")
+
+
+# ================= API ENDPOINTS =================
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "punjab-ai-concall-relay-v4", "schedule": "Daily 6:00 PM IST"}
+    return {"status": "ok", "service": "concall-punjabi-all-in-one", "schedule": "Daily 6:00 PM IST"}
 
 
 @app.get("/api/sync-status")
@@ -310,7 +317,6 @@ async def publish_concall(doc: Dict[str, Any]):
 @app.post("/api/auto-sync")
 @app.get("/api/auto-sync")
 async def trigger_auto_sync(limit: int = Query(default=5, ge=1, le=15)):
-    """Can be triggered manually by Admin anytime OR automatically by Render Cron at 6:00 PM IST."""
     return await run_bse_nse_auto_sync(limit=limit)
 
 
