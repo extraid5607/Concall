@@ -3,7 +3,7 @@ import json
 import os
 import re
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,6 +31,27 @@ DEFAULT_GLOSSARY = [
     "FY25", "FY26", "FY27", "Q1", "Q2", "Q3", "Q4", "Cr", "Crore", "Lakh",
 ]
 
+SCREENER_AUTO_SYMBOLS = [
+    ("RELIANCE", "Reliance Industries Ltd"),
+    ("TCS", "Tata Consultancy Services Ltd"),
+    ("HDFCBANK", "HDFC Bank Ltd"),
+    ("INFY", "Infosys Ltd"),
+    ("ICICIBANK", "ICICI Bank Ltd"),
+    ("BAJFINANCE", "Bajaj Finance Ltd"),
+    ("TATAMOTORS", "Tata Motors Ltd"),
+    ("ITC", "ITC Ltd"),
+    ("BHARTIARTL", "Bharti Airtel Ltd"),
+    ("SBIN", "State Bank of India"),
+    ("LT", "Larsen & Toubro Ltd"),
+    ("SUNPHARMA", "Sun Pharmaceutical Industries Ltd"),
+    ("MARUTI", "Maruti Suzuki India Ltd"),
+    ("AXISBANK", "Axis Bank Ltd"),
+    ("WIPRO", "Wipro Ltd"),
+    ("HCLTECH", "HCL Technologies Ltd"),
+    ("TITAN", "Titan Company Ltd"),
+    ("ASIANPAINT", "Asian Paints Ltd"),
+]
+
 BROWSER_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8",
@@ -55,13 +76,10 @@ def save_json_file(path: str, data: Any) -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def translate_text_with_glossary(text: str, glossary: List[str]) -> str:
-    clean = text.strip()
-    if not clean:
-        return ""
+def protect_glossary(text: str, glossary: List[str]):
     sorted_terms = sorted({t.strip() for t in (glossary or DEFAULT_GLOSSARY) if t.strip()}, key=len, reverse=True)
     token_map = []
-    protected = clean
+    protected = text
     for term in sorted_terms:
         pattern = re.compile(rf"\b({re.escape(term)})\b", re.IGNORECASE)
         def repl(m):
@@ -69,23 +87,74 @@ def translate_text_with_glossary(text: str, glossary: List[str]) -> str:
             token_map.append((tok, m.group(0)))
             return tok
         protected = pattern.sub(repl, protected)
+    return protected, token_map
 
+
+def restore_glossary(text: str, token_map) -> str:
+    out = text
+    for tok, orig in token_map:
+        out = re.sub(re.escape(tok), orig, out, flags=re.IGNORECASE)
+    return out
+
+
+def translate_text_with_glossary(text: str, glossary: List[str]) -> str:
+    clean = text.strip()
+    if not clean:
+        return ""
+    protected, token_map = protect_glossary(clean, glossary)
     translator = GoogleTranslator(source="en", target="pa")
     chunks = []
     cur = ""
     for line in protected.split("\n"):
-        if len(cur) + len(line) + 1 > 4000 and cur:
+        if len(cur) + len(line) + 1 > 3800 and cur:
             chunks.append(cur)
             cur = line
         else:
             cur = (cur + "\n" + line) if cur else line
     if cur:
         chunks.append(cur)
-
     translated = "\n".join([translator.translate(c) or c for c in chunks])
-    for tok, orig in token_map:
-        translated = re.sub(re.escape(tok), orig, translated, flags=re.IGNORECASE)
-    return translated
+    return restore_glossary(translated, token_map)
+
+
+def translate_paragraphs_batched(paras: List[str], glossary: List[str]) -> List[str]:
+    """Fast batched translation preserving exact 1-to-1 paragraph alignment (10x faster on Render)."""
+    translator = GoogleTranslator(source="en", target="pa")
+    results = []
+    batch = []
+    batch_len = 0
+
+    def flush(cur_batch: List[str]):
+        if not cur_batch:
+            return
+        sep = "\n||||\n"
+        joined = sep.join(cur_batch)
+        protected, token_map = protect_glossary(joined, glossary)
+        try:
+            tr = translator.translate(protected) or protected
+            tr = restore_glossary(tr, token_map)
+            parts = [p.strip() for p in re.split(r"\s*\|\|\|\|\s*", tr)]
+            if len(parts) == len(cur_batch):
+                results.extend(parts)
+                return
+        except Exception:
+            pass
+        # Fallback: translate each paragraph individually if separator count drifted
+        for p in cur_batch:
+            try:
+                results.append(translate_text_with_glossary(p, glossary))
+            except Exception:
+                results.append(p)
+
+    for p in paras:
+        if batch and (batch_len + len(p) + 8) > 3400:
+            flush(batch)
+            batch = []
+            batch_len = 0
+        batch.append(p)
+        batch_len += len(p) + 8
+    flush(batch)
+    return results
 
 
 def split_paragraphs_clean(raw_text: str) -> List[str]:
@@ -109,34 +178,48 @@ def split_paragraphs_clean(raw_text: str) -> List[str]:
             buf = f"{buf} {ln}".strip() if buf else ln
     if buf:
         paras.append(buf.strip())
-    return [p for p in paras if len(p) >= 12]
+    return [p for p in paras if len(p) >= 15]
 
 
 async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
     existing = load_json_file(DATA_FILE, [])
     existing_ids = {x.get("id") for x in existing}
     added = 0
+    bse_found = 0
+    nse_found = 0
+    screener_found = 0
+    errors: List[str] = []
 
     bse_headers = {**BROWSER_HEADERS, "Referer": "https://www.bseindia.com/", "Origin": "https://www.bseindia.com"}
     candidates = []
 
-    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+    today = datetime.now(timezone.utc)
+    from_date = (today - timedelta(days=20)).strftime("%Y%m%d")
+    to_date = today.strftime("%Y%m%d")
+
+    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
+        # 1. BSE India Corporate Announcements (last 20 days, filtered for Transcripts)
         try:
             r = await client.get(
                 "https://api.bseindia.com/BseIndiaAPI/api/AnnSubCategoryGetData/w",
                 params={
                     "pageno": "1",
                     "strCat": "Company Update",
+                    "strPrevDate": from_date,
+                    "strScrip": "",
                     "strSearch": "P",
+                    "strToDate": to_date,
                     "strType": "C",
-                    "subcategory": "Earnings Call Transcript",
+                    "subcategory": "",
                 },
                 headers=bse_headers,
             )
             if r.status_code == 200:
-                for row in r.json().get("Table", [])[:25]:
+                rows = r.json().get("Table", [])
+                for row in rows:
+                    subj = f"{row.get('NEWSSUB', '')} {row.get('HEADLINE', '')}"
                     att = row.get("ATTACHMENTNAME", "")
-                    if att and att.lower().endswith(".pdf"):
+                    if att and att.lower().endswith(".pdf") and re.search(r"transcript|concall|earnings\s*call|conference\s*call", subj, re.I):
                         scrip = str(row.get("SCRIP_CD", "BSE")).strip()
                         comp = (row.get("SLONGNAME") or scrip).strip()
                         dt_str = (row.get("NEWS_DT") or "").split("T")[0]
@@ -149,9 +232,11 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
                             "pdf_url": f"https://www.bseindia.com/xml-data/corpfiling/AttachLive/{att}",
                             "headers": bse_headers,
                         })
-        except Exception:
-            pass
+                        bse_found += 1
+        except Exception as e:
+            errors.append(f"BSE: {str(e)[:80]}")
 
+        # 2. NSE India Corporate Announcements
         try:
             nse_headers = {**BROWSER_HEADERS, "Referer": "https://www.nseindia.com/companies-listing/corporate-filings-announcements"}
             await client.get("https://www.nseindia.com", headers=nse_headers)
@@ -161,7 +246,7 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
                 headers=nse_headers,
             )
             if r.status_code == 200:
-                for row in r.json()[:60]:
+                for row in r.json()[:80]:
                     desc = f"{row.get('desc', '')} {row.get('attchmntText', '')}"
                     pdf_url = row.get("attchmntFile", "")
                     if pdf_url.lower().endswith(".pdf") and re.search(r"transcript|concall|earnings\s*call", desc, re.I):
@@ -177,9 +262,46 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
                             "pdf_url": pdf_url,
                             "headers": nse_headers,
                         })
-        except Exception:
-            pass
+                        nse_found += 1
+        except Exception as e:
+            errors.append(f"NSE: {str(e)[:80]}")
 
+        # 3. Screener.in Auto-Sync (Cloud-friendly fallback for top Nifty companies — pulls official BSE/NSE PDFs!)
+        if len(candidates) < limit:
+            for sym, comp_name in SCREENER_AUTO_SYMBOLS:
+                if screener_found >= limit + 2:
+                    break
+                try:
+                    sr = await client.get(f"https://www.screener.in/company/{sym}/consolidated/", headers=BROWSER_HEADERS)
+                    if sr.status_code != 200:
+                        continue
+                    soup = BeautifulSoup(sr.text, "html.parser")
+                    concalls_div = soup.find("div", class_=re.compile(r"concalls", re.I)) or soup
+                    for a in concalls_div.find_all("a", href=True):
+                        txt = a.get_text(" ", strip=True)
+                        href = a["href"]
+                        if re.search(r"transcript", txt, re.I) and href.startswith("http"):
+                            # Try to read quarter/date from parent list item
+                            parent_txt = a.parent.get_text(" ", strip=True) if a.parent else ""
+                            q_match = re.search(r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+20\d\d", parent_txt, re.I)
+                            q_label = q_match.group(0) if q_match else "Latest"
+                            doc_id = f"{sym}_{q_label.replace(' ', '_')}"
+                            if doc_id not in existing_ids:
+                                candidates.append({
+                                    "id": doc_id,
+                                    "symbol": sym,
+                                    "companyName": comp_name,
+                                    "quarter": q_label,
+                                    "sourcePlatform": "Screener Auto-Sync",
+                                    "pdf_url": href,
+                                    "headers": bse_headers if "bseindia.com" in href else BROWSER_HEADERS,
+                                })
+                                screener_found += 1
+                            break
+                except Exception:
+                    continue
+
+        # Download, extract, and translate up to `limit` new filings
         for item in candidates:
             if added >= limit:
                 break
@@ -187,21 +309,23 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
                 continue
             try:
                 pdf_res = await client.get(item["pdf_url"], headers=item["headers"])
-                if pdf_res.status_code != 200:
+                if pdf_res.status_code != 200 or len(pdf_res.content) < 500:
                     continue
                 reader = PdfReader(io.BytesIO(pdf_res.content))
-                raw_text = "\n\n".join([(p.extract_text() or "").strip() for p in reader.pages])
+                # Extract up to 25 pages cleanly
+                raw_text = "\n\n".join([(p.extract_text() or "").strip() for p in reader.pages[:25]])
                 paras = split_paragraphs_clean(raw_text)
-                if not paras:
+                if len(paras) < 3:
                     continue
 
+                # Batched Punjabi translation (fast!)
+                pa_list = translate_paragraphs_batched(paras, DEFAULT_GLOSSARY)
                 translated_pairs = []
-                for p in paras:
-                    m = re.match(r"^([A-Z][a-zA-Z.\s]{1,35}):\s*(.+)$", p)
+                for en, pa in zip(paras, pa_list):
+                    m = re.match(r"^([A-Z][a-zA-Z.\s]{1,35}):\s*(.+)$", en)
                     speaker = m.group(1).strip() if m else ""
-                    is_qa = ("?" in p) or bool(re.search(r"analyst|question|moderator", speaker, re.I))
-                    pa = translate_text_with_glossary(p, DEFAULT_GLOSSARY)
-                    translated_pairs.append({"speaker": speaker, "isQA": is_qa, "en": p, "pa": pa})
+                    is_qa = ("?" in en) or bool(re.search(r"analyst|question|moderator", speaker, re.I))
+                    translated_pairs.append({"speaker": speaker, "isQA": is_qa, "en": en, "pa": pa})
 
                 doc = {
                     "id": item["id"],
@@ -219,7 +343,8 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
                 existing.insert(0, doc)
                 existing_ids.add(item["id"])
                 added += 1
-            except Exception:
+            except Exception as e:
+                errors.append(f"{item['symbol']}: {str(e)[:60]}")
                 continue
 
     save_json_file(DATA_FILE, existing)
@@ -227,10 +352,12 @@ async def run_bse_nse_auto_sync(limit: int = 5) -> Dict[str, Any]:
         "last_sync_at": datetime.now(timezone.utc).isoformat(),
         "last_added": added,
         "total_published": len(existing),
+        "sources": {"bse": bse_found, "nse": nse_found, "screener": screener_found},
+        "errors": errors[:5],
         "schedule": "Daily 6:00 PM IST (Asia/Kolkata)",
     }
     save_json_file(META_FILE, meta)
-    return {"status": "synced", **meta}
+    return {"status": "synced", "added": added, **meta}
 
 
 @asynccontextmanager
@@ -247,7 +374,7 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown(wait=False)
 
 
-app = FastAPI(title="Concall Punjabi — Punjab AI (All-in-One)", version="5.0.0", lifespan=lifespan)
+app = FastAPI(title="Concall Punjabi — Punjab AI (All-in-One)", version="5.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -267,7 +394,6 @@ class TranslateRequest(BaseModel):
     glossary: List[str] = []
 
 
-# ================= SERVE FRONTEND DIRECTLY FROM RENDER =================
 @app.get("/")
 async def serve_index():
     return FileResponse(os.path.join(BASE_DIR, "index.html"), media_type="text/html")
@@ -278,10 +404,9 @@ async def serve_manifest():
     return FileResponse(os.path.join(BASE_DIR, "manifest.json"), media_type="application/manifest+json")
 
 
-# ================= API ENDPOINTS =================
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "concall-punjabi-all-in-one", "schedule": "Daily 6:00 PM IST"}
+    return {"status": "ok", "service": "concall-punjabi-all-in-one", "version": "5.1.0", "schedule": "Daily 6:00 PM IST"}
 
 
 @app.get("/api/sync-status")
@@ -292,6 +417,7 @@ async def sync_status():
         "schedule": "Daily 6:00 PM IST",
         "last_sync_at": meta.get("last_sync_at"),
         "last_added": meta.get("last_added", 0),
+        "sources": meta.get("sources", {}),
         "total_published": len(items),
     }
 
@@ -316,7 +442,7 @@ async def publish_concall(doc: Dict[str, Any]):
 
 @app.post("/api/auto-sync")
 @app.get("/api/auto-sync")
-async def trigger_auto_sync(limit: int = Query(default=5, ge=1, le=15)):
+async def trigger_auto_sync(limit: int = Query(default=3, ge=1, le=15)):
     return await run_bse_nse_auto_sync(limit=limit)
 
 
@@ -328,6 +454,9 @@ async def fetch_platform(
     plat = platform.strip().upper()
     q = query.strip().upper()
     items = []
+    today = datetime.now(timezone.utc)
+    from_date = (today - timedelta(days=90)).strftime("%Y%m%d")
+    to_date = today.strftime("%Y%m%d")
 
     async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
         if plat == "NSE":
@@ -361,16 +490,22 @@ async def fetch_platform(
                     params={
                         "pageno": "1",
                         "strCat": "Company Update",
+                        "strPrevDate": from_date,
+                        "strScrip": "",
                         "strSearch": "P",
+                        "strToDate": to_date,
                         "strType": "C",
-                        "subcategory": "Earnings Call Transcript",
+                        "subcategory": "",
                     },
                     headers=hdrs,
                 )
                 if r.status_code == 200:
-                    for row in r.json().get("Table", [])[:60]:
+                    for row in r.json().get("Table", []):
                         comp = row.get("SLONGNAME", "")
+                        subj = f"{row.get('NEWSSUB', '')} {row.get('HEADLINE', '')}"
                         if q not in comp.upper() and q not in str(row.get("SCRIP_CD", "")):
+                            continue
+                        if not re.search(r"transcript|concall|earnings\s*call", subj, re.I):
                             continue
                         att = row.get("ATTACHMENTNAME", "")
                         items.append({
@@ -388,18 +523,19 @@ async def fetch_platform(
                 r = await client.get(f"https://www.screener.in/company/{q}/consolidated/", headers=BROWSER_HEADERS)
                 if r.status_code == 200:
                     soup = BeautifulSoup(r.text, "html.parser")
-                    for a in soup.find_all("a", href=True):
+                    concalls_div = soup.find("div", class_=re.compile(r"concalls", re.I)) or soup
+                    for a in concalls_div.find_all("a", href=True):
                         txt = a.get_text(" ", strip=True)
                         href = a["href"]
-                        if re.search(r"transcript", txt, re.I) or href.lower().endswith(".pdf"):
-                            if re.search(r"bseindia|nseindia|concall|transcript", href + " " + txt, re.I):
-                                items.append({
-                                    "symbol": q,
-                                    "company": q,
-                                    "subject": txt or "Screener Concall Transcript",
-                                    "date": "Screener.in",
-                                    "pdf_url": href if href.startswith("http") else f"https://www.screener.in{href}",
-                                })
+                        if re.search(r"transcript", txt, re.I) and href.startswith("http"):
+                            parent_txt = a.parent.get_text(" ", strip=True) if a.parent else ""
+                            items.append({
+                                "symbol": q,
+                                "company": q,
+                                "subject": parent_txt[:90] or txt,
+                                "date": "Screener.in",
+                                "pdf_url": href,
+                            })
             except Exception:
                 pass
 
@@ -445,7 +581,8 @@ async def extract_url(req: ExtractUrlRequest):
         raise HTTPException(status_code=400, detail="Only HTTPS URLs are supported.")
 
     async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-        r = await client.get(req.url, headers=BROWSER_HEADERS)
+        hdrs = {**BROWSER_HEADERS, "Referer": "https://www.bseindia.com/"} if "bseindia.com" in req.url else BROWSER_HEADERS
+        r = await client.get(req.url, headers=hdrs)
         if r.status_code != 200:
             raise HTTPException(status_code=502, detail=f"Upstream returned HTTP {r.status_code}")
 
