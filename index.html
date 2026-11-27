@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concall ਪੰਜਾਬੀ — Punjab AI</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Gurmukhi:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans Gurmukhi', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+    .pa-text {
+      font-family: 'Noto Sans Gurmukhi', 'Inter', sans-serif;
+      line-height: 1.9;
+    }
+    .eng-term {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      border-radius: 4px;
+      padding: 0 5px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 0.92em;
+      white-space: nowrap;
+    }
+    .no-highlight .eng-term {
+      background: transparent;
+      color: inherit;
+      border: none;
+      padding: 0;
+      font-weight: 600;
+    }
+    .reading-active {
+      border-color: #059669 !important;
+      background: #ecfdf5 !important;
+      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+    }
+    .pill-active {
+      background-color: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased">
+
+  <!-- Minimal Clean Header -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+      <button type="button" id="brandHomeBtn" class="flex items-center gap-2 text-left">
+        <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shrink-0">ਪੰ</div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-base tracking-tight text-slate-900">Concall ਪੰਜਾਬੀ</span>
+          <span class="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Punjab AI</span>
+        </div>
+      </button>
+
+      <div class="flex items-center gap-2">
+        <button type="button" id="lockAdminBtn" class="hidden px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition flex items-center gap-1.5">
+          <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+          <span>Lock</span>
+        </button>
+        <button type="button" id="switchToUserBtn" class="hidden px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          <span>User View</span>
+        </button>
+        <button type="button" id="switchToAdminBtn" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+          <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-600"></i>
+          <span>Admin</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-6">
+
+    <!-- ==================== 1. USER HOME: PLAIN SEARCH + COMPANIES LIST ==================== -->
+    <section id="view-user-home" class="space-y-6">
+      <div class="space-y-3">
+        <div class="text-center sm:text-left">
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Companies Concall in ਪੰਜਾਬੀ</h1>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Search any company below and tap to read or listen to its earnings call in Punjabi.</p>
+        </div>
+
+        <!-- Clean Top Search Bar -->
+        <div class="relative">
+          <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+          <input id="userSearchInput" type="text" placeholder="Search company name or symbol (e.g. Reliance, TCS, HDFC Bank)..." class="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-white border border-slate-300 text-sm sm:text-base text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15" />
+          <button type="button" id="clearUserSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700" aria-label="Clear search">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Companies List Header -->
+      <div class="flex items-center justify-between text-xs text-slate-500 border-b border-slate-200 pb-2">
+        <span id="companiesCountLabel" class="font-medium text-slate-700">Companies</span>
+        <span id="userLastSyncHint">Daily Auto-Sync: 6:00 PM IST</span>
+      </div>
+
+      <!-- Scrollable Companies List -->
+      <div id="userCompaniesList" class="divide-y divide-slate-200 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"></div>
+
+      <!-- Empty State -->
+      <div id="userEmptyState" class="hidden rounded-2xl border border-slate-200 bg-white p-10 text-center space-y-3 shadow-sm">
+        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+          <i data-lucide="file-text" class="w-6 h-6"></i>
+        </div>
+        <div class="space-y-1 max-w-sm mx-auto">
+          <h2 class="text-base font-bold text-slate-900">No Concalls Published Yet</h2>
+          <p class="text-xs sm:text-sm text-slate-500">New Indian company concalls sync automatically every evening at 6:00 PM IST once the Render relay is connected, or Admin can upload/sync anytime.</p>
+        </div>
+        <button type="button" id="emptyOpenAdminBtn" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition inline-flex items-center gap-1.5">
+          <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+          <span>Unlock Admin</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== 2. USER READER ==================== -->
+    <section id="view-user-reader" class="hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="space-y-1 min-w-0">
+            <button type="button" id="backToCompaniesBtn" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 mb-1">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+              <span>All Companies</span>
+            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="readerSymbol" class="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs">TICKER</span>
+              <span id="readerSourceTag" class="text-[11px] text-slate-500"></span>
+            </div>
+            <h2 id="readerCompanyName" class="text-lg sm:text-xl font-bold text-slate-900 truncate">Company Name</h2>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" id="readerCopyBtn" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium flex items-center gap-1.5">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">Copy ਪੰਜਾਬੀ</span>
+            </button>
+            <a id="readerOriginalPdfLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium items-center gap-1">
+              <span>Original PDF ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <div id="readerQuarterRow" class="flex flex-wrap items-center gap-1.5"></div>
+
+        <!-- Simple Punjabi Audio Bar -->
+        <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <button type="button" id="ttsPlayBtn" class="w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition shrink-0" aria-label="Play Punjabi audio">
+              <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            </button>
+            <button type="button" id="ttsStopBtn" class="w-8 h-8 rounded-full bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 flex items-center justify-center transition shrink-0" aria-label="Stop audio">
+              <i data-lucide="square" class="w-3.5 h-3.5"></i>
+            </button>
+            <div class="min-w-0">
+              <p id="ttsStatusLabel" class="text-xs font-semibold text-slate-900 truncate">Listen in ਪੰਜਾਬੀ</p>
+              <p id="ttsProgressLabel" class="text-[11px] text-slate-500 truncate">Tap Play or click any paragraph</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <label for="ttsRateSelect" class="text-[11px] text-slate-500">Speed</label>
+            <select id="ttsRateSelect" class="px-2 py-1 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 focus:outline-none">
+              <option value="0.85">0.85x</option>
+              <option value="1" selected>1.0x</option>
+              <option value="1.2">1.2x</option>
+              <option value="1.4">1.4x</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Clean Reading Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
+          <div class="flex items-center gap-1">
+            <button type="button" class="reader-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white" data-rtab="transcript">Full Concall</button>
+            <button type="button" class="reader-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100" data-rtab="summary">Summary &amp; KPIs</button>
+            <button type="button" class="reader-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100" data-rtab="qa">Q&amp;A</button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[11px]">
+              <button type="button" class="lang-btn px-2.5 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-sm" data-lang="pa">ਪੰਜਾਬੀ</button>
+              <button type="button" class="lang-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900" data-lang="both">Both</button>
+              <button type="button" class="lang-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900" data-lang="en">English</button>
+            </div>
+            <button type="button" id="toggleHighlightBtn" class="px-2 py-1 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-[11px] font-medium">Terms: ON</button>
+            <button type="button" id="fontDownBtn" class="px-2 py-1 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 hover:bg-slate-50">A-</button>
+            <button type="button" id="fontUpBtn" class="px-2 py-1 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 hover:bg-slate-50">A+</button>
+          </div>
+        </div>
+
+        <div class="relative">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="readerSearchInput" type="text" placeholder="Search inside this concall (e.g. Margin, Guidance, Capex)..." class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600" />
+        </div>
+      </div>
+
+      <div id="reader-panel-transcript" class="space-y-3"></div>
+      <div id="reader-panel-summary" class="hidden space-y-4">
+        <div id="summaryKpiGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
+          <h3 class="text-sm font-bold text-slate-900">Key Highlights (ਪੰਜਾਬੀ ਵਿੱਚ)</h3>
+          <div id="summaryBody" class="pa-text text-sm text-slate-800 space-y-2.5"></div>
+        </div>
+      </div>
+      <div id="reader-panel-qa" class="hidden space-y-3"></div>
+    </section>
+
+    <!-- ==================== 3. ADMIN PANEL (LOCKED BY PIN 1430) ==================== -->
+    <section id="view-admin" class="hidden space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Admin Panel</h1>
+          <p class="text-xs sm:text-sm text-slate-500">Daily 6:00 PM IST Auto-Sync + manual BSE/NSE sync, PDF upload, and publishing.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="adminExportBtn" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700">Export JSON</button>
+          <label for="adminImportInput" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer">Import JSON</label>
+          <input id="adminImportInput" type="file" accept="application/json" class="hidden" />
+        </div>
+      </div>
+
+      <!-- Auto-Sync Control Card -->
+      <div class="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+            <h2 class="text-sm font-bold text-emerald-950">Automatic Daily Sync: 6:00 PM IST</h2>
+          </div>
+          <p id="autoSyncStatusText" class="text-xs text-emerald-900/80">Connect your Render Relay URL in Tab 3 to enable automatic evening 6:00 PM IST BSE/NSE concall syncing.</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <select id="autoSyncLimitSelect" class="px-2.5 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-semibold text-slate-800 focus:outline-none">
+            <option value="3">Latest 3</option>
+            <option value="5" selected>Latest 5</option>
+            <option value="10">Latest 10</option>
+          </select>
+          <button type="button" id="adminAutoSyncBtn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Manual Auto-Sync Now</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Sub-Navigation -->
+      <div class="flex items-center gap-1.5 border-b border-slate-200 pb-2 overflow-x-auto">
+        <button type="button" class="admin-tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white shrink-0" data-atab="add">1. Upload / Fetch Concall</button>
+        <button type="button" class="admin-tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/60 shrink-0" data-atab="manage">2. Manage Published (<span id="adminPubCount">0</span>)</button>
+        <button type="button" class="admin-tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/60 shrink-0" data-atab="settings">3. Relay, AI &amp; Glossary</button>
+      </div>
+
+      <!-- ADMIN TAB 1: ADD / TRANSLATE -->
+      <div id="admin-panel-add" class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-5">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="adminSymbol" class="block text-xs font-semibold text-slate-700 mb-1">Company Symbol (NSE/BSE) *</label>
+            <input id="adminSymbol" type="text" placeholder="e.g. RELIANCE" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-sm uppercase text-slate-900 focus:outline-none focus:border-emerald-600" />
+          </div>
+          <div>
+            <label for="adminCompanyName" class="block text-xs font-semibold text-slate-700 mb-1">Full Company Name *</label>
+            <input id="adminCompanyName" type="text" placeholder="e.g. Reliance Industries Ltd" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-emerald-600" />
+          </div>
+          <div>
+            <label for="adminQuarter" class="block text-xs font-semibold text-slate-700 mb-1">Quarter / FY *</label>
+            <input id="adminQuarter" type="text" value="Q2 FY27" placeholder="e.g. Q2 FY27" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-emerald-600" />
+          </div>
+        </div>
+
+        <!-- Source Mode Selector -->
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" class="src-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white" data-smode="pdf">Upload Manual PDF</button>
+            <button type="button" class="src-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200" data-smode="fetch">Fetch from Platform / URL</button>
+            <button type="button" class="src-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200" data-smode="paste">Paste English Transcript</button>
+          </div>
+
+          <div id="src-box-pdf" class="space-y-2">
+            <label for="pdfFileInput" id="pdfDropZone" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-7 cursor-pointer bg-slate-50 transition text-center">
+              <i data-lucide="file-up" class="w-7 h-7 text-emerald-600 mb-2"></i>
+              <p class="text-sm font-semibold text-slate-900">Click to select or drag &amp; drop Concall PDF</p>
+              <p class="text-xs text-slate-500 mt-0.5">Extracts all pages while preserving original transcript paragraphs &amp; speaker turns</p>
+              <input id="pdfFileInput" type="file" accept="application/pdf" class="hidden" />
+            </label>
+            <div id="pdfStatusBanner" class="hidden rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs text-emerald-800 flex items-center justify-between gap-2">
+              <span id="pdfStatusText">Extracted</span>
+              <button type="button" id="clearPdfBtn" class="underline font-semibold shrink-0">Clear</button>
+            </div>
+          </div>
+
+          <div id="src-box-fetch" class="hidden space-y-3 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div>
+                <label for="fetchPlatformSelect" class="block text-[11px] font-semibold text-slate-600 mb-1">Platform</label>
+                <select id="fetchPlatformSelect" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-emerald-600">
+                  <option value="NSE">NSE India</option>
+                  <option value="BSE">BSE India</option>
+                  <option value="SCREENER">Screener.in</option>
+                  <option value="STOCKSCAN">StockScan</option>
+                  <option value="ALPHASTREET">AlphaStreet</option>
+                  <option value="URL">Direct PDF / Webpage URL</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label for="fetchQueryOrUrl" class="block text-[11px] font-semibold text-slate-600 mb-1">Company Symbol or Direct Transcript / PDF URL</label>
+                <div class="flex gap-2">
+                  <input id="fetchQueryOrUrl" type="text" placeholder="Symbol (e.g. RELIANCE) or https://... PDF/transcript link" class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-emerald-600" />
+                  <button type="button" id="adminFetchBtn" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shrink-0">Fetch</button>
+                </div>
+              </div>
+            </div>
+            <div id="adminFetchResults" class="space-y-2"></div>
+          </div>
+
+          <div id="src-box-paste" class="hidden space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <label for="adminRawText" class="font-semibold text-slate-700">Full English Transcript Text</label>
+              <span id="adminCharCount" class="text-slate-500">0 chars</span>
+            </div>
+            <textarea id="adminRawText" rows="8" placeholder="Paste the full English concall transcript here..." class="w-full p-3 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-emerald-600"></textarea>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="text-xs text-slate-600">
+            <span class="font-semibold text-slate-800">Engine:</span>
+            <span id="adminEngineStatus">Paragraph-by-Paragraph Punjabi Translator</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="adminCancelTranslateBtn" class="hidden px-4 py-2.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-semibold text-xs">Stop</button>
+            <button type="button" id="adminTranslatePublishBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition flex items-center justify-center gap-2">
+              <i data-lucide="languages" class="w-4 h-4"></i>
+              <span>Translate Full Concall &amp; Publish</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="adminProgressBox" class="hidden rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span id="adminProgressLabel" class="font-semibold text-emerald-700">Translating...</span>
+            <span id="adminProgressPct" class="font-mono text-slate-600">0%</span>
+          </div>
+          <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
+            <div id="adminProgressBar" class="h-full bg-emerald-600 transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <p class="text-[11px] text-slate-500">Preserving every original paragraph &amp; keeping English financial terms intact.</p>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB 2: MANAGE PUBLISHED -->
+      <div id="admin-panel-manage" class="hidden bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-900">Published Concalls (Visible to Users)</h2>
+          <span class="text-xs text-slate-500">Open or remove entries</span>
+        </div>
+        <div id="adminPublishedList" class="divide-y divide-slate-200"></div>
+      </div>
+
+      <!-- ADMIN TAB 3: SETTINGS -->
+      <div id="admin-panel-settings" class="hidden bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-5">
+        <div class="space-y-1.5">
+          <label for="relayUrlInput" class="block text-xs font-bold text-slate-800">Render Python Relay URL (6:00 PM IST Auto-Sync + Server-Side Translation + gTTS)</label>
+          <div class="flex gap-2">
+            <input id="relayUrlInput" type="url" placeholder="https://punjab-ai-concall-relay.onrender.com" class="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-emerald-600" />
+            <button type="button" id="testRelayBtn" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold">Test</button>
+          </div>
+          <p id="relayTestResult" class="text-[11px] text-slate-500">Paste your live Render HTTPS URL here after deploying `backend/main.py`.</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <label for="geminiKeyInput" class="block text-xs font-bold text-slate-800">Optional Gemini API Key (Fastest Browser Translation)</label>
+          <input id="geminiKeyInput" type="password" placeholder="AIzaSy... (optional)" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-emerald-600" />
+        </div>
+
+        <div class="space-y-1.5">
+          <label for="glossaryTextarea" class="block text-xs font-bold text-slate-800">Common English Words Kept in English (comma-separated)</label>
+          <textarea id="glossaryTextarea" rows="4" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-emerald-600"></textarea>
+          <div class="flex justify-end">
+            <button type="button" id="resetGlossaryBtn" class="text-xs text-slate-500 hover:text-slate-800 underline">Reset Default Glossary</button>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2 border-t border-slate-100">
+          <button type="button" id="saveSettingsBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs">Save Admin Settings</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Admin PIN Lock Modal -->
+  <div id="pinModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-xs bg-white rounded-2xl border border-slate-200 shadow-2xl p-6 space-y-4">
+      <div class="text-center space-y-1.5">
+        <div class="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center mx-auto">
+          <i data-lucide="lock" class="w-5 h-5"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900">Admin Lock</h3>
+        <p class="text-xs text-slate-500">Enter 4-digit Admin PIN to unlock.</p>
+      </div>
+      <form id="pinForm" class="space-y-3">
+        <input id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="Enter PIN" autocomplete="off" class="w-full text-center tracking-[0.4em] text-lg font-bold px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15" />
+        <p id="pinErrorMsg" class="hidden text-center text-xs font-medium text-rose-600">Incorrect PIN. Try again.</p>
+        <div class="flex items-center gap-2 pt-1">
+          <button type="button" id="cancelPinBtn" class="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700">Cancel</button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">Unlock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Box -->
+  <div id="toastBox" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+
+      const ADMIN_PIN = '1430';
+      const ADMIN_SESSION_KEY = 'punjab_ai_admin_unlocked';
+
+      const DEFAULT_GLOSSARY = [
+        'EBITDA', 'PAT', 'YoY', 'QoQ', 'Revenue', 'Margin', 'Gross Margin', 'Operating Margin',
+        'Net Profit', 'Capex', 'Opex', 'Guidance', 'Order Book', 'EPS', 'ROE', 'ROCE',
+        'Free Cash Flow', 'Working Capital', 'Cash Flow', 'Balance Sheet', 'Management',
+        'Analyst', 'Moderator', 'Quarter', 'Basis Points', 'bps', 'CAGR', 'Debt', 'Equity',
+        'Dividend', 'Valuation', 'Market Share', 'Volume Growth', 'Pipeline', 'Headwinds',
+        'Tailwinds', 'Demand', 'Supply Chain', 'NPA', 'GNPA', 'NNPA', 'NIM', 'AUM', 'ARPU',
+        'CASA', 'Credit Cost', 'Slippages', 'Promoter', 'Subsidiary', 'Acquisition', 'Merger',
+        'IPO', 'QIP', 'SEBI', 'RBI', 'NSE', 'BSE', 'NIFTY', 'SENSEX', 'Concall', 'Transcript',
+        'FY25', 'FY26', 'FY27', 'FY28', 'Q1', 'Q2', 'Q3', 'Q4', 'H1', 'H2', 'Cr', 'Crore', 'Lakh'
+      ];
+
+      const STORAGE_KEY = 'punjab_ai_concall_light_v3';
+
+      function loadStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function saveStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            settings: state.settings,
+            published: state.published
+          }));
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      function isAdminUnlocked() {
+        try {
+          return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1';
+        } catch (e) {
+          return state.adminUnlockedMem;
+        }
+      }
+
+      function setAdminUnlocked(val) {
+        state.adminUnlockedMem = Boolean(val);
+        try {
+          if (val) sessionStorage.setItem(ADMIN_SESSION_KEY, '1');
+          else sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      const saved = loadStorage();
+
+      const state = {
+        view: 'user-home',
+        adminUnlockedMem: false,
+        adminTab: 'add',
+        sourceMode: 'pdf',
+        readerTab: 'transcript',
+        readerLang: 'pa',
+        highlightTerms: true,
+        fontSize: 16,
+        extractedText: '',
+        extractedSourceUrl: '',
+        cancelTranslation: false,
+        activeSymbol: null,
+        activeDocId: null,
+        tts: {
+          playing: false,
+          currentIndex: -1,
+          rate: 1.0,
+          audioEl: null
+        },
+        settings: (saved && saved.settings) ? saved.settings : {
+          relayUrl: '',
+          geminiApiKey: '',
+          glossary: DEFAULT_GLOSSARY.slice()
+        },
+        published: (saved && Array.isArray(saved.published)) ? saved.published : []
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      function showToast(msg, type = 'info') {
+        const box = $('toastBox');
+        const el = document.createElement('div');
+        const styles = {
+          success: 'bg-emerald-700 text-white border-emerald-800',
+          error: 'bg-rose-700 text-white border-rose-800',
+          info: 'bg-slate-900 text-white border-slate-800'
+        };
+        el.className = `pointer-events-auto px-4 py-2.5 rounded-xl border text-xs font-medium shadow-lg transition-opacity duration-300 ${styles[type] || styles.info}`;
+        el.textContent = msg;
+        box.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          setTimeout(() => el.remove(), 300);
+        }, 3500);
+      }
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function normalizeRelayUrl(url) {
+        const clean = (url || '').trim().replace(/\/+$/, '');
+        if (clean.startsWith('https://')) return clean;
+        if (window.location && window.location.origin && window.location.origin.startsWith('https://')) {
+          return window.location.origin;
+        }
+        return '';
+      }
+
+      function sleep(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
+
+      // ================= ADMIN PIN LOCK =================
+      function requestAdminAccess() {
+        if (isAdminUnlocked()) {
+          setView('admin');
+          return;
+        }
+        $('pinInput').value = '';
+        $('pinErrorMsg').classList.add('hidden');
+        $('pinModal').classList.remove('hidden');
+        setTimeout(() => $('pinInput').focus(), 50);
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function closePinModal() {
+        $('pinModal').classList.add('hidden');
+      }
+
+      $('pinForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const entered = ($('pinInput').value || '').trim();
+        if (entered === ADMIN_PIN) {
+          setAdminUnlocked(true);
+          closePinModal();
+          setView('admin');
+          showToast('Admin unlocked.', 'success');
+        } else {
+          $('pinErrorMsg').classList.remove('hidden');
+          $('pinInput').value = '';
+          $('pinInput').focus();
+        }
+      });
+
+      $('cancelPinBtn').addEventListener('click', closePinModal);
+      $('lockAdminBtn').addEventListener('click', () => {
+        setAdminUnlocked(false);
+        setView('user-home');
+        showToast('Admin locked.', 'info');
+      });
+
+      // ================= VIEW NAVIGATION =================
+      function setView(v) {
+        if (v === 'admin' && !isAdminUnlocked()) {
+          requestAdminAccess();
+          return;
+        }
+        stopTTS();
+        state.view = v;
+        $('view-user-home').classList.toggle('hidden', v !== 'user-home');
+        $('view-user-reader').classList.toggle('hidden', v !== 'user-reader');
+        $('view-admin').classList.toggle('hidden', v !== 'admin');
+
+        $('switchToAdminBtn').classList.toggle('hidden', v === 'admin');
+        $('switchToUserBtn').classList.toggle('hidden', v !== 'admin');
+        $('lockAdminBtn').classList.toggle('hidden', v !== 'admin');
+
+        if (v === 'user-home') renderUserCompaniesList();
+        if (v === 'user-reader') renderUserReader();
+        if (v === 'admin') {
+          syncAdminSettingsUI();
+          renderAdminPublishedList();
+          refreshSyncStatus();
+        }
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      // ================= USER HOME =================
+      function getCompaniesGrouped() {
+        const map = {};
+        state.published.forEach((doc) => {
+          const sym = (doc.symbol || 'UNKNOWN').toUpperCase();
+          if (!map[sym]) {
+            map[sym] = { symbol: sym, companyName: doc.companyName || sym, docs: [] };
+          }
+          map[sym].docs.push(doc);
+        });
+        Object.values(map).forEach((g) => {
+          g.docs.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        });
+        return Object.values(map).sort((a, b) => a.companyName.localeCompare(b.companyName));
+      }
+
+      function renderUserCompaniesList() {
+        const q = ($('userSearchInput').value || '').trim().toLowerCase();
+        $('clearUserSearchBtn').classList.toggle('hidden', !q);
+
+        const allGroups = getCompaniesGrouped();
+        const filtered = allGroups.filter((g) =>
+          !q ||
+          g.symbol.toLowerCase().includes(q) ||
+          g.companyName.toLowerCase().includes(q) ||
+          g.docs.some((d) => (d.quarter || '').toLowerCase().includes(q))
+        );
+
+        const listEl = $('userCompaniesList');
+        const emptyEl = $('userEmptyState');
+        $('companiesCountLabel').textContent = `${filtered.length} ${filtered.length === 1 ? 'Company' : 'Companies'} Available`;
+
+        if (!allGroups.length) {
+          listEl.classList.add('hidden');
+          emptyEl.classList.remove('hidden');
+          return;
+        }
+
+        emptyEl.classList.add('hidden');
+        listEl.classList.remove('hidden');
+        listEl.innerHTML = '';
+
+        if (!filtered.length) {
+          listEl.innerHTML = `<div class="p-8 text-center text-sm text-slate-500">No company found matching "${escapeHtml(q)}".</div>`;
+          return;
+        }
+
+        filtered.forEach((group) => {
+          const latest = group.docs[0];
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'w-full text-left px-4 sm:px-5 py-4 hover:bg-slate-50 transition flex items-center justify-between gap-3';
+          row.innerHTML = `
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-sm sm:text-base text-slate-900 truncate">${escapeHtml(group.companyName)}</span>
+                <span class="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold shrink-0">${escapeHtml(group.symbol)}</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Latest: <span class="font-medium text-slate-700">${escapeHtml(latest.quarter)}</span>
+                • ${group.docs.length} ${group.docs.length === 1 ? 'Concall' : 'Concalls'}
+                • ${latest.paragraphs.length} paragraphs
+              </p>
+            </div>
+            <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 shrink-0"></i>
+          `;
+          row.addEventListener('click', () => {
+            state.activeSymbol = group.symbol;
+            state.activeDocId = latest.id;
+            setView('user-reader');
+          });
+          listEl.appendChild(row);
+        });
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      // ================= USER READER =================
+      function getActiveDoc() {
+        return state.published.find((d) => d.id === state.activeDocId) || null;
+      }
+
+      function renderUserReader() {
+        const doc = getActiveDoc();
+        if (!doc) {
+          setView('user-home');
+          return;
+        }
+
+        $('readerSymbol').textContent = doc.symbol;
+        $('readerCompanyName').textContent = doc.companyName;
+        $('readerSourceTag').textContent = `${doc.quarter} • ${doc.paragraphs.length} paragraphs`;
+
+        const pdfLink = $('readerOriginalPdfLink');
+        if (doc.sourceUrl && doc.sourceUrl.startsWith('https://')) {
+          pdfLink.href = doc.sourceUrl;
+          pdfLink.classList.remove('hidden');
+          pdfLink.classList.add('inline-flex');
+        } else {
+          pdfLink.classList.add('hidden');
+          pdfLink.classList.remove('inline-flex');
+        }
+
+        const sameCompanyDocs = state.published.filter((d) => d.symbol === doc.symbol);
+        const qRow = $('readerQuarterRow');
+        qRow.innerHTML = '';
+        sameCompanyDocs.forEach((d) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const active = d.id === doc.id;
+          btn.className = `px-3 py-1 rounded-lg border text-xs font-semibold transition ${active ? 'pill-active' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`;
+          btn.textContent = d.quarter;
+          btn.addEventListener('click', () => {
+            stopTTS();
+            state.activeDocId = d.id;
+            renderUserReader();
+          });
+          qRow.appendChild(btn);
+        });
+
+        renderReaderParagraphs();
+        renderReaderSummary();
+        renderReaderQA();
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function getSortedGlossary() {
+        const list = (state.settings.glossary && state.settings.glossary.length) ? state.settings.glossary : DEFAULT_GLOSSARY;
+        return Array.from(new Set(list.map((w) => w.trim()).filter(Boolean))).sort((a, b) => b.length - a.length);
+      }
+
+      function highlightEnglishTermsHtml(text) {
+        const safe = escapeHtml(text);
+        const glossary = getSortedGlossary();
+        if (!glossary.length) return safe;
+        const pattern = glossary.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+        const regex = new RegExp(`\\b(${pattern})\\b`, 'gi');
+        return safe.replace(regex, '<span class="eng-term">$1</span>');
+      }
+
+      function renderReaderParagraphs() {
+        const doc = getActiveDoc();
+        if (!doc) return;
+        const container = $('reader-panel-transcript');
+        const filter = ($('readerSearchInput').value || '').trim().toLowerCase();
+        container.innerHTML = '';
+        container.classList.toggle('no-highlight', !state.highlightTerms);
+
+        const list = doc.paragraphs
+          .map((p, idx) => ({ ...p, idx }))
+          .filter((p) => !filter || p.pa.toLowerCase().includes(filter) || p.en.toLowerCase().includes(filter) || (p.speaker || '').toLowerCase().includes(filter));
+
+        if (!list.length) {
+          container.innerHTML = '<div class="bg-white rounded-2xl border border-slate-200 p-6 text-center text-xs text-slate-500">No paragraphs match your search.</div>';
+          return;
+        }
+
+        list.forEach((p) => {
+          const card = document.createElement('div');
+          const speaking = state.tts.playing && state.tts.currentIndex === p.idx;
+          card.className = `bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm transition cursor-pointer hover:border-emerald-400 ${speaking ? 'reading-active' : ''}`;
+
+          const speakerBadge = p.speaker
+            ? `<span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mb-2 ${p.isQA ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">${escapeHtml(p.speaker)}</span>`
+            : `<span class="inline-block text-[10px] font-mono text-slate-400 mb-1.5">Paragraph ${p.idx + 1}</span>`;
+
+          const paHtml = `<p class="pa-text text-slate-900" style="font-size:${state.fontSize}px">${highlightEnglishTermsHtml(p.pa)}</p>`;
+          const enHtml = `<p class="text-slate-600 leading-relaxed" style="font-size:${Math.max(13, state.fontSize - 1)}px">${escapeHtml(p.en)}</p>`;
+
+          if (state.readerLang === 'pa') {
+            card.innerHTML = `${speakerBadge}${paHtml}`;
+          } else if (state.readerLang === 'en') {
+            card.innerHTML = `${speakerBadge}${enHtml}`;
+          } else {
+            card.innerHTML = `${speakerBadge}<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1"><div class="border-b md:border-b-0 md:border-r border-slate-200 pb-3 md:pb-0 md:pr-4">${paHtml}</div><div>${enHtml}</div></div>`;
+          }
+
+          card.addEventListener('click', () => startTTSFromIndex(p.idx));
+          container.appendChild(card);
+        });
+      }
+
+      function renderReaderSummary() {
+        const doc = getActiveDoc();
+        if (!doc) return;
+        const kpiGrid = $('summaryKpiGrid');
+        kpiGrid.innerHTML = '';
+        const kpis = (doc.kpis && doc.kpis.length) ? doc.kpis : [
+          { label: 'Quarter', value: doc.quarter },
+          { label: 'Total Paragraphs', value: String(doc.paragraphs.length) },
+          { label: 'Q&A Items', value: String(doc.paragraphs.filter((p) => p.isQA).length) },
+          { label: 'Status', value: 'Published' }
+        ];
+        kpis.forEach((k) => {
+          const box = document.createElement('div');
+          box.className = 'bg-white rounded-xl border border-slate-200 p-3.5 shadow-sm';
+          box.innerHTML = `<p class="text-[11px] text-slate-500">${escapeHtml(k.label)}</p><p class="text-base font-bold text-emerald-700 mt-0.5">${escapeHtml(k.value)}</p>`;
+          kpiGrid.appendChild(box);
+        });
+
+        const body = $('summaryBody');
+        body.innerHTML = '';
+        const bullets = (doc.summaryBullets && doc.summaryBullets.length) ? doc.summaryBullets : ['No highlights extracted.'];
+        bullets.forEach((b) => {
+          const row = document.createElement('div');
+          row.className = 'flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200';
+          row.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600 mt-2.5 shrink-0"></span><div>${highlightEnglishTermsHtml(b)}</div>`;
+          body.appendChild(row);
+        });
+      }
+
+      function renderReaderQA() {
+        const doc = getActiveDoc();
+        if (!doc) return;
+        const container = $('reader-panel-qa');
+        container.innerHTML = '';
+        const qas = doc.paragraphs.filter((p) => p.isQA);
+        if (!qas.length) {
+          container.innerHTML = '<div class="bg-white rounded-2xl border border-slate-200 p-6 text-center text-xs text-slate-500">No explicit Q&amp;A markers detected in this transcript.</div>';
+          return;
+        }
+        qas.forEach((item, idx) => {
+          const card = document.createElement('div');
+          card.className = 'bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-2';
+          card.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold">Q&amp;A #${idx + 1}</span>
+              ${item.speaker ? `<span class="text-xs text-slate-500">${escapeHtml(item.speaker)}</span>` : ''}
+            </div>
+            <p class="pa-text text-sm text-slate-900">${highlightEnglishTermsHtml(item.pa)}</p>
+            <p class="text-xs text-slate-500 pt-2 border-t border-slate-100">${escapeHtml(item.en)}</p>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      // ================= PUNJABI AUDIO (TTS) =================
+      function stopTTS() {
+        state.tts.playing = false;
+        state.tts.currentIndex = -1;
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (state.tts.audioEl) {
+          state.tts.audioEl.pause();
+          state.tts.audioEl = null;
+        }
+        updateTTSUI();
+        if (state.view === 'user-reader') renderReaderParagraphs();
+      }
+
+      function updateTTSUI() {
+        const playBtn = $('ttsPlayBtn');
+        const doc = getActiveDoc();
+        if (!playBtn) return;
+        if (state.tts.playing) {
+          playBtn.innerHTML = '<i data-lucide="pause" class="w-4 h-4 fill-current"></i>';
+          $('ttsStatusLabel').textContent = `Playing ਪੰਜਾਬੀ (${state.tts.currentIndex + 1} / ${doc ? doc.paragraphs.length : 0})`;
+        } else {
+          playBtn.innerHTML = '<i data-lucide="play" class="w-4 h-4 fill-current"></i>';
+          $('ttsStatusLabel').textContent = 'Listen in ਪੰਜਾਬੀ';
+          $('ttsProgressLabel').textContent = 'Tap Play or click any paragraph';
+        }
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      async function startTTSFromIndex(idx) {
+        const doc = getActiveDoc();
+        if (!doc || !doc.paragraphs.length) return;
+        if (idx >= doc.paragraphs.length) {
+          stopTTS();
+          showToast('Finished reading concall.', 'success');
+          return;
+        }
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (state.tts.audioEl) {
+          state.tts.audioEl.pause();
+          state.tts.audioEl = null;
+        }
+
+        state.tts.playing = true;
+        state.tts.currentIndex = idx;
+        updateTTSUI();
+        renderReaderParagraphs();
+
+        const paraText = doc.paragraphs[idx].pa;
+        $('ttsProgressLabel').textContent = paraText.slice(0, 75) + (paraText.length > 75 ? '...' : '');
+
+        const relay = normalizeRelayUrl(state.settings.relayUrl);
+        if (relay) {
+          try {
+            const audio = new Audio(`${relay}/api/tts?text=${encodeURIComponent(paraText.slice(0, 500))}`);
+            audio.playbackRate = state.tts.rate;
+            state.tts.audioEl = audio;
+            audio.onended = () => { if (state.tts.playing) startTTSFromIndex(idx + 1); };
+            audio.onerror = () => speakBrowserTTS(paraText, idx);
+            await audio.play();
+            return;
+          } catch (e) { /* fallback */ }
+        }
+        speakBrowserTTS(paraText, idx);
+      }
+
+      function speakBrowserTTS(text, idx) {
+        if (!('speechSynthesis' in window)) {
+          showToast('Audio TTS not supported in this browser.', 'error');
+          stopTTS();
+          return;
+        }
+        const utter = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        const paVoice = voices.find((v) => v.lang.toLowerCase().startsWith('pa')) || voices.find((v) => v.lang.toLowerCase().startsWith('hi'));
+        if (paVoice) utter.voice = paVoice;
+        utter.lang = paVoice ? paVoice.lang : 'pa-IN';
+        utter.rate = state.tts.rate;
+        utter.onend = () => { if (state.tts.playing) startTTSFromIndex(idx + 1); };
+        utter.onerror = () => { if (state.tts.playing) stopTTS(); };
+        window.speechSynthesis.speak(utter);
+      }
+
+      // ================= PDF & TEXT PARAGRAPH RECONSTRUCTION =================
+      async function extractPdfPreservingParagraphs(arrayBuffer) {
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const allParagraphs = [];
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const content = await page.getTextContent();
+          const items = content.items || [];
+          if (!items.length) continue;
+
+          const lines = [];
+          let curLine = null;
+          for (const it of items) {
+            const str = (it.str || '').trim();
+            if (!str) continue;
+            const y = it.transform ? Math.round(it.transform[5]) : 0;
+            const h = it.height || (it.transform ? Math.abs(it.transform[0]) : 10) || 10;
+            if (!curLine || Math.abs(curLine.y - y) > Math.max(3, h * 0.45)) {
+              if (curLine) lines.push(curLine);
+              curLine = { y, h, text: str };
+            } else {
+              curLine.text += ' ' + str;
+            }
+          }
+          if (curLine) lines.push(curLine);
+
+          let paraBuf = '';
+          let prevY = null;
+          let prevH = 10;
+
+          for (const ln of lines) {
+            const txt = ln.text.replace(/\s+/g, ' ').trim();
+            if (!txt || /^(page\s+\d+(\s+of\s+\d+)?|\d{1,3})$/i.test(txt)) continue;
+
+            const isSpeakerStart = /^([A-Z][a-zA-Z.\s]{1,35}):\s*/.test(txt);
+            const yGap = (prevY !== null) ? Math.abs(prevY - ln.y) : 0;
+            const isVisualParaBreak = (prevY !== null && yGap > prevH * 1.65);
+
+            if (paraBuf && (isSpeakerStart || isVisualParaBreak)) {
+              allParagraphs.push(paraBuf.trim());
+              paraBuf = txt;
+            } else {
+              paraBuf = paraBuf ? (paraBuf + ' ' + txt) : txt;
+            }
+            prevY = ln.y;
+            prevH = ln.h || 10;
+          }
+          if (paraBuf.trim()) allParagraphs.push(paraBuf.trim());
+        }
+
+        return { numPages: pdf.numPages, text: allParagraphs.join('\n\n') };
+      }
+
+      function splitTextIntoParagraphs(rawText) {
+        const normalized = rawText.replace(/\r\n/g, '\n').trim();
+        if (!normalized) return [];
+        const rawBlocks = normalized.split(/\n\s*\n+/);
+        const expanded = [];
+        for (const block of rawBlocks) {
+          const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+          let buf = '';
+          for (const ln of lines) {
+            const startsSpeaker = /^([A-Z][a-zA-Z.\s]{1,35}):\s*/.test(ln);
+            const prevEndedSentence = /[.?!]["')\]]?$/.test(buf);
+            if (buf && (startsSpeaker || (prevEndedSentence && buf.length > 180))) {
+              expanded.push(buf.trim());
+              buf = ln;
+            } else {
+              buf = buf ? (buf + ' ' + ln) : ln;
+            }
+          }
+          if (buf.trim()) expanded.push(buf.trim());
+        }
+
+        const finalParas = [];
+        for (const p of expanded) {
+          const clean = p.replace(/\s+/g, ' ').trim();
+          if (clean.length < 8) continue;
+          if (clean.length <= 650) {
+            finalParas.push(clean);
+          } else {
+            const sentences = clean.match(/[^.!?]+[.!?]*\s*/g) || [clean];
+            let chunk = '';
+            for (const s of sentences) {
+              if ((chunk + s).length > 550 && chunk.trim()) {
+                finalParas.push(chunk.trim());
+                chunk = s;
+              } else {
+                chunk += s;
+              }
+            }
+            if (chunk.trim()) finalParas.push(chunk.trim());
+          }
+        }
+        return finalParas;
+      }
+
+      // ================= TRANSLATION CASCADE =================
+      function protectGlossaryTerms(text) {
+        const glossary = getSortedGlossary();
+        const map = [];
+        let protectedText = text;
+        glossary.forEach((term) => {
+          const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b(${escaped})\\b`, 'gi');
+          protectedText = protectedText.replace(regex, (match) => {
+            const token = `ZXQ${map.length}QZ`;
+            map.push({ token, original: match });
+            return token;
+          });
+        });
+        return { protectedText, map };
+      }
+
+      function restoreGlossaryTerms(translatedText, map) {
+        let output = translatedText;
+        map.forEach(({ token, original }) => {
+          const regex = new RegExp(token, 'gi');
+          output = output.replace(regex, original);
+        });
+        return output;
+      }
+
+      function hasGurmukhi(str) {
+        return /[\u0A00-\u0A7F]/.test(str || '');
+      }
+
+      async function translateSingleParagraph(englishText) {
+        const { protectedText, map } = protectGlossaryTerms(englishText);
+
+        const relay = normalizeRelayUrl(state.settings.relayUrl);
+        if (relay) {
+          try {
+            const r = await fetch(`${relay}/api/translate`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: englishText, glossary: getSortedGlossary() })
+            });
+            if (r.ok) {
+              const d = await r.json();
+              if (d.punjabi && hasGurmukhi(d.punjabi)) return { pa: d.punjabi, provider: 'Render Relay' };
+            }
+          } catch (e) { /* next */ }
+        }
+
+        try {
+          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=pa&dt=t&q=${encodeURIComponent(protectedText)}`;
+          const r = await fetch(url);
+          if (r.ok) {
+            const data = await r.json();
+            if (Array.isArray(data) && Array.isArray(data[0])) {
+              const joined = data[0].map((seg) => (seg && seg[0]) ? seg[0] : '').join('');
+              const restored = restoreGlossaryTerms(joined, map);
+              if (hasGurmukhi(restored)) return { pa: restored, provider: 'Google Translate' };
+            }
+          }
+        } catch (e) { /* next */ }
+
+        try {
+          const url = `https://lingva.ml/api/v1/en/pa/${encodeURIComponent(protectedText)}`;
+          const r = await fetch(url);
+          if (r.ok) {
+            const data = await r.json();
+            if (data && data.translation) {
+              const restored = restoreGlossaryTerms(data.translation, map);
+              if (hasGurmukhi(restored)) return { pa: restored, provider: 'Lingva Mirror' };
+            }
+          }
+        } catch (e) { /* next */ }
+
+        if (protectedText.length <= 450) {
+          try {
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(protectedText)}&langpair=en|pa`;
+            const r = await fetch(url);
+            if (r.ok) {
+              const data = await r.json();
+              const tr = data?.responseData?.translatedText || '';
+              if (tr && !/MYMEMORY WARNING/i.test(tr) && hasGurmukhi(tr)) {
+                return { pa: restoreGlossaryTerms(tr, map), provider: 'MyMemory' };
+              }
+            }
+          } catch (e) { /* failed */ }
+        }
+
+        return { pa: englishText, provider: 'FAILED' };
+      }
+
+      async function translateBatchGemini(batchParagraphs, companyName, quarter) {
+        const apiKey = (state.settings.geminiApiKey || '').trim();
+        const glossaryStr = getSortedGlossary().slice(0, 45).join(', ');
+        const payload = batchParagraphs.map((p, i) => `[${i}] ${p}`).join('\n\n');
+        const prompt = `Translate these ${batchParagraphs.length} Indian earnings concall paragraphs (${companyName} ${quarter}) into natural Gurmukhi Punjabi.
+Keep common English market/financial terms in English (${glossaryStr}, numbers, ₹, %, FY/Q labels, speaker names).
+Return ONLY valid JSON: {"items": ["punjabi 0", "punjabi 1", ...]} with exact length ${batchParagraphs.length}.
+
+${payload}`;
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          })
+        });
+        if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
+        const data = await res.json();
+        const parsed = JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+        if (!Array.isArray(parsed.items)) throw new Error('Invalid Gemini JSON');
+        return parsed.items;
+      }
+
+      function detectSpeakerAndType(text) {
+        const m = text.match(/^([A-Z][a-zA-Z.\s]{1,35}):\s*(.+)$/);
+        const speaker = m ? m[1].trim() : '';
+        const body = m ? m[2].trim() : text;
+        const isQA = /\?/.test(body) || /analyst|question|moderator|participant/i.test(speaker);
+        return { speaker, isQA };
+      }
+
+      function extractKpis(fullText) {
+        const metrics = [];
+        const rules = [
+          { label: 'Revenue / Growth', re: /(?:revenue|top\s*line)[^.]{0,60}?(\d+(?:\.\d+)?%|\₹?\s?\d[\d,]*(?:\.\d+)?\s?(?:crore|cr|billion|mn))/i },
+          { label: 'EBITDA / Margin', re: /(?:ebitda|margin)[^.]{0,60}?(\d+(?:\.\d+)?%|\d+\s?bps)/i },
+          { label: 'Net Profit / PAT', re: /(?:pat|net profit)[^.]{0,60}?(\d+(?:\.\d+)?%|\₹?\s?\d[\d,]*(?:\.\d+)?\s?(?:crore|cr))/i },
+          { label: 'Capex / Guidance', re: /(?:capex|guidance|order book)[^.]{0,60}?(\d+(?:\.\d+)?%|\₹?\s?\d[\d,]*(?:\.\d+)?\s?(?:crore|cr))/i }
+        ];
+        rules.forEach((r) => {
+          const m = fullText.match(r.re);
+          if (m) metrics.push({ label: r.label, value: m[1].trim() });
+        });
+        return metrics;
+      }
+
+      // ================= ADMIN WORKFLOWS =================
+      async function handleAdminPdfFile(file) {
+        if (!file) return;
+        if (!window.pdfjsLib) {
+          showToast('PDF library still loading.', 'error');
+          return;
+        }
+        $('pdfStatusBanner').classList.remove('hidden');
+        $('pdfStatusText').textContent = `Extracting paragraphs from ${file.name}...`;
+        try {
+          const buf = await file.arrayBuffer();
+          const res = await extractPdfPreservingParagraphs(buf);
+          state.extractedText = res.text;
+          state.extractedSourceUrl = '';
+          const paraCount = splitTextIntoParagraphs(res.text).length;
+          $('pdfStatusText').textContent = `Ready: ${res.numPages} pages → ${paraCount} original paragraphs extracted from ${file.name}`;
+          if (!$('adminSymbol').value.trim()) {
+            $('adminSymbol').value = file.name.replace(/\.pdf$/i, '').split(/[_\-\s]/)[0].toUpperCase().slice(0, 14);
+          }
+          if (!$('adminCompanyName').value.trim()) {
+            $('adminCompanyName').value = file.name.replace(/\.pdf$/i, '').replace(/[_\-]+/g, ' ').trim();
+          }
+          showToast(`Extracted ${paraCount} paragraphs from ${res.numPages} pages!`, 'success');
+        } catch (err) {
+          $('pdfStatusText').textContent = 'Could not read PDF.';
+          showToast('Failed to extract PDF.', 'error');
+        }
+      }
+
+      async function handleTranslateAndPublish() {
+        const symbol = ($('adminSymbol').value || '').trim().toUpperCase();
+        const companyName = ($('adminCompanyName').value || '').trim() || symbol;
+        const quarter = ($('adminQuarter').value || 'Q2 FY27').trim();
+
+        const rawText = state.sourceMode === 'paste'
+          ? $('adminRawText').value.trim()
+          : (state.extractedText || $('adminRawText').value.trim());
+
+        if (!symbol) {
+          showToast('Enter Company Symbol first.', 'error');
+          return;
+        }
+        if (!rawText || rawText.length < 20) {
+          showToast('Upload a PDF, fetch a transcript, or paste English text first.', 'error');
+          return;
+        }
+
+        const paragraphs = splitTextIntoParagraphs(rawText);
+        const useGemini = Boolean((state.settings.geminiApiKey || '').trim());
+
+        state.cancelTranslation = false;
+        $('adminProgressBox').classList.remove('hidden');
+        $('adminCancelTranslateBtn').classList.remove('hidden');
+        $('adminTranslatePublishBtn').disabled = true;
+        $('adminTranslatePublishBtn').classList.add('opacity-60');
+
+        const translatedPairs = [];
+        let failedCount = 0;
+        let lastProvider = useGemini ? 'Gemini AI' : 'Google Translate';
+
+        try {
+          if (useGemini) {
+            const batchSize = 10;
+            for (let i = 0; i < paragraphs.length; i += batchSize) {
+              if (state.cancelTranslation) return;
+              const slice = paragraphs.slice(i, i + batchSize);
+              const pct = Math.round((Math.min(i + batchSize, paragraphs.length) / paragraphs.length) * 100);
+              $('adminProgressLabel').textContent = `Translating via Gemini AI (${Math.min(i + batchSize, paragraphs.length)} / ${paragraphs.length})...`;
+              $('adminProgressPct').textContent = `${pct}%`;
+              $('adminProgressBar').style.width = `${pct}%`;
+
+              try {
+                const items = await translateBatchGemini(slice, companyName, quarter);
+                slice.forEach((en, idx) => {
+                  const meta = detectSpeakerAndType(en);
+                  translatedPairs.push({ speaker: meta.speaker, isQA: meta.isQA, en, pa: items[idx] || en });
+                });
+              } catch (err) {
+                failedCount += slice.length;
+                slice.forEach((en) => {
+                  const meta = detectSpeakerAndType(en);
+                  translatedPairs.push({ speaker: meta.speaker, isQA: meta.isQA, en, pa: en });
+                });
+              }
+              await sleep(200);
+            }
+          } else {
+            for (let i = 0; i < paragraphs.length; i += 2) {
+              if (state.cancelTranslation) return;
+              const slice = paragraphs.slice(i, i + 2);
+              const resArr = await Promise.all(slice.map((en) => translateSingleParagraph(en)));
+
+              slice.forEach((en, idx) => {
+                const meta = detectSpeakerAndType(en);
+                const r = resArr[idx];
+                if (r.provider === 'FAILED') failedCount++;
+                else lastProvider = r.provider;
+                translatedPairs.push({ speaker: meta.speaker, isQA: meta.isQA, en, pa: r.pa });
+              });
+
+              const done = Math.min(i + 2, paragraphs.length);
+              const pct = Math.round((done / paragraphs.length) * 100);
+              $('adminProgressLabel').textContent = `Translating via ${lastProvider} — Paragraph ${done} of ${paragraphs.length}...`;
+              $('adminProgressPct').textContent = `${pct}%`;
+              $('adminProgressBar').style.width = `${pct}%`;
+              if (done < paragraphs.length) await sleep(180);
+            }
+          }
+
+          if (failedCount === paragraphs.length) {
+            showToast('Connect Render Relay or add a Gemini API key in Tab 3 for translation.', 'error');
+          } else {
+            showToast(`Published ${paragraphs.length} paragraphs in ਪੰਜਾਬੀ!`, 'success');
+          }
+
+          const keyHighlights = translatedPairs
+            .filter((p) => /revenue|ebitda|margin|growth|guidance|profit|capex|demand|outlook/i.test(p.en))
+            .slice(0, 5)
+            .map((p) => p.pa);
+
+          const doc = {
+            id: `${symbol}_${quarter.replace(/\s+/g, '_')}`,
+            symbol,
+            companyName,
+            quarter,
+            sourcePlatform: state.sourceMode === 'fetch' ? $('fetchPlatformSelect').value : (state.sourceMode === 'pdf' ? 'PDF Upload' : 'Manual Transcript'),
+            sourceUrl: state.extractedSourceUrl || '',
+            engine: lastProvider,
+            kpis: extractKpis(rawText),
+            summaryBullets: keyHighlights.length ? keyHighlights : translatedPairs.slice(0, 3).map((p) => p.pa),
+            paragraphs: translatedPairs,
+            updatedAt: new Date().toISOString()
+          };
+
+          state.published = state.published.filter((d) => d.id !== doc.id);
+          state.published.unshift(doc);
+          saveStorage();
+
+          const relay = normalizeRelayUrl(state.settings.relayUrl);
+          if (relay) {
+            try {
+              await fetch(`${relay}/api/publish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(doc)
+              });
+            } catch (e) { /* local save ok */ }
+          }
+
+          renderAdminPublishedList();
+          state.activeSymbol = doc.symbol;
+          state.activeDocId = doc.id;
+          setView('user-reader');
+        } finally {
+          $('adminTranslatePublishBtn').disabled = false;
+          $('adminTranslatePublishBtn').classList.remove('opacity-60');
+          $('adminCancelTranslateBtn').classList.add('hidden');
+          setTimeout(() => {
+            $('adminProgressBox').classList.add('hidden');
+            $('adminProgressBar').style.width = '0%';
+          }, 800);
+        }
+      }
+
+      async function handleAdminPlatformFetch() {
+        const platform = $('fetchPlatformSelect').value;
+        const input = ($('fetchQueryOrUrl').value || '').trim();
+        const resBox = $('adminFetchResults');
+        const relay = normalizeRelayUrl(state.settings.relayUrl);
+
+        if (!input) {
+          showToast('Enter a company symbol or direct URL first.', 'error');
+          return;
+        }
+
+        if (relay) {
+          resBox.innerHTML = '<p class="text-xs text-slate-600">Fetching from ' + escapeHtml(platform) + ' via Relay...</p>';
+          try {
+            if (platform === 'URL' || input.startsWith('https://')) {
+              const r = await fetch(`${relay}/api/extract-url`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: input })
+              });
+              if (!r.ok) throw new Error('Relay could not extract URL');
+              const data = await r.json();
+              state.extractedText = data.text || '';
+              state.extractedSourceUrl = input;
+              $('adminRawText').value = state.extractedText;
+              $('adminCharCount').textContent = `${state.extractedText.length.toLocaleString()} chars`;
+              resBox.innerHTML = `<div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800">Extracted ${splitTextIntoParagraphs(state.extractedText).length} paragraphs! Click <strong>Translate Full Concall &amp; Publish</strong>.</div>`;
+              showToast('Transcript extracted!', 'success');
+              return;
+            }
+
+            const r = await fetch(`${relay}/api/fetch-platform?platform=${encodeURIComponent(platform)}&query=${encodeURIComponent(input)}`);
+            if (!r.ok) throw new Error('Relay HTTP ' + r.status);
+            const data = await r.json();
+            const items = Array.isArray(data.items) ? data.items : [];
+            if (!items.length) {
+              resBox.innerHTML = `<p class="text-xs text-slate-500">No concall filings found on ${escapeHtml(platform)} for "${escapeHtml(input)}".</p>`;
+              return;
+            }
+            resBox.innerHTML = '';
+            items.forEach((item) => {
+              const row = document.createElement('div');
+              row.className = 'rounded-xl bg-white border border-slate-200 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2';
+              row.innerHTML = `
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-slate-900 truncate">${escapeHtml(item.company || item.symbol)} <span class="text-slate-400 font-normal">• ${escapeHtml(item.date || '')}</span></p>
+                  <p class="text-[11px] text-slate-500 truncate">${escapeHtml(item.subject || 'Earnings Call Transcript')}</p>
+                </div>
+                <button type="button" class="load-item-btn px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shrink-0">Load Text</button>
+              `;
+              row.querySelector('.load-item-btn').addEventListener('click', async () => {
+                $('adminSymbol').value = (item.symbol || input).toUpperCase();
+                $('adminCompanyName').value = item.company || item.symbol || input;
+                $('fetchQueryOrUrl').value = item.pdf_url;
+                $('fetchPlatformSelect').value = 'URL';
+                await handleAdminPlatformFetch();
+              });
+              resBox.appendChild(row);
+            });
+            return;
+          } catch (err) {
+            showToast('Relay fetch failed. Opening direct platform link.', 'error');
+          }
+        }
+
+        const sym = encodeURIComponent(input.toUpperCase());
+        const links = {
+          NSE: `https://www.nseindia.com/get-quotes/equity?symbol=${sym}`,
+          BSE: `https://www.bseindia.com/corporates/ann.html`,
+          SCREENER: `https://www.screener.in/company/${sym}/consolidated/#documents`,
+          STOCKSCAN: `https://www.google.com/search?q=site:stockscan.io+${sym}+earnings+call+transcript`,
+          ALPHASTREET: `https://news.alphastreet.com/?s=${sym}`,
+          URL: input.startsWith('https://') ? input : `https://www.screener.in/company/${sym}/consolidated/#documents`
+        };
+        const target = links[platform] || links.SCREENER;
+        resBox.innerHTML = `
+          <div class="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 space-y-2">
+            <p class="font-semibold">Connect Render Relay in Tab 3 for automatic fetch, or open ${escapeHtml(platform)} directly:</p>
+            <a href="${escapeHtml(target)}" target="_blank" rel="noopener noreferrer" class="inline-block px-3 py-1.5 rounded-lg bg-white border border-amber-300 font-semibold text-amber-900 hover:bg-amber-100">Open ${escapeHtml(platform)} for ${escapeHtml(input.toUpperCase())} ↗</a>
+          </div>
+        `;
+      }
+
+      async function refreshSyncStatus() {
+        const relay = normalizeRelayUrl(state.settings.relayUrl);
+        if (!relay) {
+          $('autoSyncStatusText').textContent = 'Connect your Render Relay URL in Tab 3 to enable automatic daily 6:00 PM IST syncing.';
+          return;
+        }
+        try {
+          const r = await fetch(`${relay}/api/sync-status`);
+          if (!r.ok) return;
+          const d = await r.json();
+          const last = d.last_sync_at ? new Date(d.last_sync_at).toLocaleString() : 'Not synced yet';
+          $('autoSyncStatusText').textContent = `Connected • Schedule: ${d.schedule || 'Daily 6:00 PM IST'} • Last Sync: ${last} • ${d.total_published || 0} published`;
+          $('userLastSyncHint').textContent = `Auto-Synced • Daily 6:00 PM IST`;
+        } catch (e) { /* ignore */ }
+      }
+
+      async function syncPublishedFromRelay(triggerAutoSync = false) {
+        const relay = normalizeRelayUrl(state.settings.relayUrl);
+        if (!relay) {
+          if (triggerAutoSync) {
+            showToast('Enter your Render Relay URL in Admin → Tab 3 first.', 'error');
+          }
+          return;
+        }
+        const btn = $('adminAutoSyncBtn');
+        try {
+          if (triggerAutoSync) {
+            btn.disabled = true;
+            btn.classList.add('opacity-60');
+            const limit = $('autoSyncLimitSelect').value || '5';
+            showToast(`Running manual Auto-Sync (latest ${limit} BSE/NSE concalls)...`, 'info');
+            const sr = await fetch(`${relay}/api/auto-sync?limit=${encodeURIComponent(limit)}`, { method: 'POST' });
+            if (!sr.ok) throw new Error('Auto-sync failed');
+            const sdata = await sr.json();
+            showToast(`Auto-Sync complete! Added ${sdata.added || 0} new concall(s).`, 'success');
+          }
+          const r = await fetch(`${relay}/api/published`);
+          if (!r.ok) return;
+          const data = await r.json();
+          if (Array.isArray(data.items) && data.items.length) {
+            const map = new Map();
+            state.published.forEach((d) => map.set(d.id, d));
+            data.items.forEach((d) => map.set(d.id, d));
+            state.published = Array.from(map.values());
+            saveStorage();
+            if (state.view === 'user-home') renderUserCompaniesList();
+            if (state.view === 'admin') renderAdminPublishedList();
+          }
+          refreshSyncStatus();
+        } catch (e) {
+          if (triggerAutoSync) showToast('Auto-sync failed. Check Render Relay status.', 'error');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('opacity-60');
+          }
+        }
+      }
+
+      // ================= ADMIN MANAGE & SETTINGS =================
+      function renderAdminPublishedList() {
+        $('adminPubCount').textContent = String(state.published.length);
+        const list = $('adminPublishedList');
+        list.innerHTML = '';
+        if (!state.published.length) {
+          list.innerHTML = '<p class="py-6 text-center text-xs text-slate-500">No concalls published yet.</p>';
+          return;
+        }
+        state.published.forEach((doc) => {
+          const row = document.createElement('div');
+          row.className = 'py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2';
+          row.innerHTML = `
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs">${escapeHtml(doc.symbol)}</span>
+                <span class="font-semibold text-sm text-slate-900 truncate">${escapeHtml(doc.companyName)}</span>
+                <span class="text-xs text-slate-500">• ${escapeHtml(doc.quarter)}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">${doc.paragraphs.length} paragraphs • ${escapeHtml(doc.sourcePlatform || 'Published')}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" class="adm-open-btn px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700">Open</button>
+              <button type="button" class="adm-del-btn px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-xs font-semibold text-rose-700">Delete</button>
+            </div>
+          `;
+          row.querySelector('.adm-open-btn').addEventListener('click', () => {
+            state.activeSymbol = doc.symbol;
+            state.activeDocId = doc.id;
+            setView('user-reader');
+          });
+          row.querySelector('.adm-del-btn').addEventListener('click', () => {
+            state.published = state.published.filter((d) => d.id !== doc.id);
+            saveStorage();
+            renderAdminPublishedList();
+            showToast(`Removed ${doc.symbol} ${doc.quarter}`, 'info');
+          });
+          list.appendChild(row);
+        });
+      }
+
+      function syncAdminSettingsUI() {
+        $('relayUrlInput').value = state.settings.relayUrl || '';
+        $('geminiKeyInput').value = state.settings.geminiApiKey || '';
+        $('glossaryTextarea').value = getSortedGlossary().join(', ');
+        $('adminEngineStatus').textContent = (state.settings.geminiApiKey || '').trim()
+          ? 'Gemini AI (Paragraph-Preserving Punjabi + Glossary)'
+          : (normalizeRelayUrl(state.settings.relayUrl)
+            ? 'Render Python Relay (Server-Side Punjabi + Glossary)'
+            : 'Paragraph-by-Paragraph Punjabi Translator (Google GTX + Lingva)');
+      }
+
+      // ================= EVENT LISTENERS =================
+      $('brandHomeBtn').addEventListener('click', () => setView('user-home'));
+      $('switchToAdminBtn').addEventListener('click', requestAdminAccess);
+      $('emptyOpenAdminBtn').addEventListener('click', requestAdminAccess);
+      $('switchToUserBtn').addEventListener('click', () => setView('user-home'));
+      $('backToCompaniesBtn').addEventListener('click', () => setView('user-home'));
+
+      $('userSearchInput').addEventListener('input', renderUserCompaniesList);
+      $('clearUserSearchBtn').addEventListener('click', () => {
+        $('userSearchInput').value = '';
+        renderUserCompaniesList();
+      });
+
+      document.querySelectorAll('.reader-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.readerTab = btn.dataset.rtab;
+          document.querySelectorAll('.reader-tab-btn').forEach((b) => {
+            const active = b.dataset.rtab === state.readerTab;
+            b.className = active
+              ? 'reader-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white'
+              : 'reader-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100';
+          });
+          ['transcript', 'summary', 'qa'].forEach((t) => {
+            $(`reader-panel-${t}`).classList.toggle('hidden', t !== state.readerTab);
+          });
+        });
+      });
+
+      document.querySelectorAll('.lang-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.readerLang = btn.dataset.lang;
+          document.querySelectorAll('.lang-btn').forEach((b) => {
+            const active = b.dataset.lang === state.readerLang;
+            b.className = active
+              ? 'lang-btn px-2.5 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-sm'
+              : 'lang-btn px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900';
+          });
+          renderReaderParagraphs();
+        });
+      });
+
+      $('toggleHighlightBtn').addEventListener('click', () => {
+        state.highlightTerms = !state.highlightTerms;
+        $('toggleHighlightBtn').textContent = state.highlightTerms ? 'Terms: ON' : 'Terms: OFF';
+        renderReaderParagraphs();
+      });
+
+      $('fontDownBtn').addEventListener('click', () => {
+        state.fontSize = Math.max(13, state.fontSize - 1);
+        renderReaderParagraphs();
+      });
+      $('fontUpBtn').addEventListener('click', () => {
+        state.fontSize = Math.min(24, state.fontSize + 1);
+        renderReaderParagraphs();
+      });
+      $('readerSearchInput').addEventListener('input', renderReaderParagraphs);
+
+      $('readerCopyBtn').addEventListener('click', async () => {
+        const doc = getActiveDoc();
+        if (!doc) return;
+        const text = `${doc.companyName} (${doc.quarter}) — Concall ਪੰਜਾਬੀ\n\n` +
+          doc.paragraphs.map((p) => (p.speaker ? `${p.speaker}: ` : '') + p.pa).join('\n\n');
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast('Punjabi transcript copied!', 'success');
+        } catch (e) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+          showToast('Punjabi transcript copied!', 'success');
+        }
+      });
+
+      $('ttsPlayBtn').addEventListener('click', () => {
+        if (state.tts.playing) stopTTS();
+        else startTTSFromIndex(state.tts.currentIndex >= 0 ? state.tts.currentIndex : 0);
+      });
+      $('ttsStopBtn').addEventListener('click', stopTTS);
+      $('ttsRateSelect').addEventListener('change', (e) => {
+        state.tts.rate = parseFloat(e.target.value) || 1.0;
+        if (state.tts.audioEl) state.tts.audioEl.playbackRate = state.tts.rate;
+      });
+
+      document.querySelectorAll('.admin-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.adminTab = btn.dataset.atab;
+          document.querySelectorAll('.admin-tab-btn').forEach((b) => {
+            const active = b.dataset.atab === state.adminTab;
+            b.className = active
+              ? 'admin-tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white shrink-0'
+              : 'admin-tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200/60 shrink-0';
+          });
+          ['add', 'manage', 'settings'].forEach((t) => {
+            $(`admin-panel-${t}`).classList.toggle('hidden', t !== state.adminTab);
+          });
+        });
+      });
+
+      document.querySelectorAll('.src-mode-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.sourceMode = btn.dataset.smode;
+          document.querySelectorAll('.src-mode-btn').forEach((b) => {
+            const active = b.dataset.smode === state.sourceMode;
+            b.className = active
+              ? 'src-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white'
+              : 'src-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200';
+          });
+          ['pdf', 'fetch', 'paste'].forEach((m) => {
+            $(`src-box-${m}`).classList.toggle('hidden', m !== state.sourceMode);
+          });
+        });
+      });
+
+      $('pdfFileInput').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) handleAdminPdfFile(e.target.files[0]);
+      });
+      const dz = $('pdfDropZone');
+      dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('border-emerald-500'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('border-emerald-500'));
+      dz.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dz.classList.remove('border-emerald-500');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) handleAdminPdfFile(e.dataTransfer.files[0]);
+      });
+
+      $('clearPdfBtn').addEventListener('click', () => {
+        state.extractedText = '';
+        $('pdfFileInput').value = '';
+        $('pdfStatusBanner').classList.add('hidden');
+      });
+
+      $('adminRawText').addEventListener('input', (e) => {
+        $('adminCharCount').textContent = `${e.target.value.length.toLocaleString()} chars`;
+      });
+
+      $('adminFetchBtn').addEventListener('click', handleAdminPlatformFetch);
+      $('adminTranslatePublishBtn').addEventListener('click', handleTranslateAndPublish);
+      $('adminCancelTranslateBtn').addEventListener('click', () => { state.cancelTranslation = true; });
+      $('adminAutoSyncBtn').addEventListener('click', () => syncPublishedFromRelay(true));
+
+      $('adminExportBtn').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state.published, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'concalls_catalog.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Exported concalls_catalog.json', 'success');
+      });
+
+      $('adminImportInput').addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const arr = JSON.parse(await file.text());
+          if (!Array.isArray(arr)) throw new Error('Invalid JSON');
+          state.published = arr;
+          saveStorage();
+          renderAdminPublishedList();
+          showToast(`Imported ${arr.length} concall(s)!`, 'success');
+        } catch (err) {
+          showToast('Invalid concalls JSON file.', 'error');
+        }
+      });
+
+      $('resetGlossaryBtn').addEventListener('click', () => {
+        $('glossaryTextarea').value = DEFAULT_GLOSSARY.join(', ');
+      });
+
+      $('testRelayBtn').addEventListener('click', async () => {
+        const url = normalizeRelayUrl($('relayUrlInput').value);
+        const resEl = $('relayTestResult');
+        if (!url) {
+          resEl.textContent = 'Enter a valid https:// Render Relay URL.';
+          resEl.className = 'text-[11px] text-rose-600';
+          return;
+        }
+        resEl.textContent = 'Testing connection...';
+        try {
+          const r = await fetch(`${url}/health`);
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          resEl.textContent = 'Connected! Daily 6:00 PM IST Auto-Sync & Punjabi Translation ready.';
+          resEl.className = 'text-[11px] text-emerald-700 font-semibold';
+        } catch (e) {
+          resEl.textContent = 'Could not connect to relay. Check Render URL.';
+          resEl.className = 'text-[11px] text-rose-600';
+        }
+      });
+
+      $('saveSettingsBtn').addEventListener('click', () => {
+        const rawUrl = $('relayUrlInput').value.trim();
+        if (rawUrl && !rawUrl.startsWith('https://')) {
+          showToast('Relay URL must start with https://', 'error');
+          return;
+        }
+        state.settings.relayUrl = normalizeRelayUrl(rawUrl);
+        state.settings.geminiApiKey = $('geminiKeyInput').value.trim();
+        const terms = $('glossaryTextarea').value.split(',').map((s) => s.trim()).filter(Boolean);
+        state.settings.glossary = terms.length ? terms : DEFAULT_GLOSSARY.slice();
+        saveStorage();
+        syncAdminSettingsUI();
+        showToast('Admin settings saved!', 'success');
+        syncPublishedFromRelay(false);
+      });
+
+      // Init
+      setView('user-home');
+      syncPublishedFromRelay(false);
+    })();
+  </script>
+</body>
+</html>
